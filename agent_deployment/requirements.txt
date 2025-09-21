@@ -1,0 +1,8 @@
+google-cloud-aiplatform>=1.38.0
+google-cloud-dialogflow>=2.21.0
+google-auth>=2.23.0
+google-auth-oauthlib>=1.1.0
+google-auth-httplib2>=0.1.1
+pyyaml>=6.0
+asyncio>=3.4.3
+aiohttp>=3.8.0
