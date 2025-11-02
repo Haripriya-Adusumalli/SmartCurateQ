@@ -58,7 +58,7 @@ spec:
     - name: "founder_assessor"
       description: "Assess founder capabilities and responses"
   
-  model: "gemini-1.5-pro"
+  model: "gemini-2.5-pro"
   temperature: 0.4
   maxTokens: 4096
   

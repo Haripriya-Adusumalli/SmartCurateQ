@@ -1,0 +1,18 @@
+runtime: python312
+
+entrypoint: streamlit run cloud_app.py --server.port=8080 --server.address=0.0.0.0
+
+env_variables:
+  GOOGLE_CLOUD_PROJECT: firstsample-269604
+  GOOGLE_CLOUD_REGION: us-central1
+  LVX_STORAGE_BUCKET: lvx-startup-assets
+  LVX_BIGQUERY_DATASET: lvx_curation
+
+automatic_scaling:
+  min_instances: 1
+  max_instances: 10
+  target_cpu_utilization: 0.6
+
+resources:
+  cpu: 2
+  memory_gb: 4

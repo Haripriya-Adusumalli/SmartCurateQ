@@ -56,6 +56,6 @@ spec:
     - name: "news_analyzer"
       description: "Analyze news sentiment and coverage"
   
-  model: "gemini-1.5-pro"
+  model: "gemini-2.5-pro"
   temperature: 0.1
   maxTokens: 4096

@@ -42,7 +42,7 @@ class AgentDeployer:
                 display_name=config['metadata']['displayName'],
                 description=config['spec']['description'],
                 instructions=config['spec']['instructions'],
-                model=config['spec'].get('model', 'gemini-1.5-pro'),
+                model=config['spec'].get('model', 'gemini-2.5-pro'),
                 temperature=config['spec'].get('temperature', 0.2),
                 max_tokens=config['spec'].get('maxTokens', 4096),
                 tools=config['spec'].get('tools', [])

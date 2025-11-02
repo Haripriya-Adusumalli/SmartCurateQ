@@ -15,13 +15,21 @@ except ImportError:
 
 class AnalysisAgent:
     def __init__(self):
-        if VERTEX_AI_AVAILABLE and Config.USE_VERTEX_AI:
-            vertexai.init(project=Config.PROJECT_ID, location=Config.LOCATION)
-            self.model = GenerativeModel('gemini-pro')
-            self.use_vertex = True
+        if VERTEX_AI_AVAILABLE:
+            try:
+                vertexai.init(project=Config.PROJECT_ID, location=Config.LOCATION)
+                self.model = GenerativeModel('gemini-2.5-pro')
+                self.use_vertex = True
+            except Exception:
+                self.model = None
+                self.use_vertex = False
         else:
             self.model = None
             self.use_vertex = False
+    
+    def analyze_startup(self, startup: StartupProfile, preferences: InvestorPreferences) -> InvestmentMemo:
+        """Analyze startup and generate investment memo"""
+        return self.generate_investment_memo(startup, preferences)
     
     def generate_investment_memo(self, startup: StartupProfile, preferences: InvestorPreferences) -> InvestmentMemo:
         """Generate comprehensive investment memo"""
@@ -51,41 +59,56 @@ class AnalysisAgent:
     def _calculate_investment_score(self, startup: StartupProfile, preferences: InvestorPreferences) -> float:
         """Calculate weighted investment score based on investor preferences"""
         
-        # Founder score (0-10)
-        founder_score = sum(f.founder_market_fit_score for f in startup.founders) / len(startup.founders)
+        # Founder score (0-10) with null check
+        if startup.founders and len(startup.founders) > 0:
+            founder_scores = [f.founder_market_fit_score or 5.0 for f in startup.founders]
+            founder_score = sum(founder_scores) / len(founder_scores)
+        else:
+            founder_score = 5.0
         
         # Market score (0-10)
-        market_score = self._score_market_opportunity(startup.market_analysis)
+        market_score = self._score_market_opportunity(startup.market_analysis) or 5.0
         
         # Differentiation score (0-10)
-        diff_score = self._score_differentiation(startup.unique_differentiator)
+        diff_score = self._score_differentiation(startup.unique_differentiator or "") or 5.0
         
         # Traction score (0-10)
-        traction_score = self._score_traction(startup.business_metrics)
+        traction_score = self._score_traction(startup.business_metrics) or 0.0
         
-        # Apply investor weights
+        # Apply investor weights with null checks
+        founder_weight = preferences.founder_weight or 0.25
+        market_weight = preferences.market_weight or 0.25
+        diff_weight = preferences.differentiation_weight or 0.25
+        traction_weight = preferences.traction_weight or 0.25
+        
         weighted_score = (
-            founder_score * preferences.founder_weight +
-            market_score * preferences.market_weight +
-            diff_score * preferences.differentiation_weight +
-            traction_score * preferences.traction_weight
+            founder_score * founder_weight +
+            market_score * market_weight +
+            diff_score * diff_weight +
+            traction_score * traction_weight
         )
         
         return min(10.0, max(0.0, weighted_score))
     
     def _score_market_opportunity(self, market: any) -> float:
         """Score market opportunity (0-10)"""
+        if not market:
+            return 5.0
+            
         score = 5.0  # Base score
         
-        if market.market_size > Config.MIN_MARKET_SIZE:
+        market_size = getattr(market, 'market_size', 0) or 0
+        if market_size > Config.MIN_MARKET_SIZE:
             score += 2.0
         
-        if market.growth_rate > 0.15:  # 15% growth
+        growth_rate = getattr(market, 'growth_rate', 0) or 0
+        if growth_rate > 0.15:  # 15% growth
             score += 1.5
         
-        if market.competition_level == "low":
+        competition_level = getattr(market, 'competition_level', 'medium') or 'medium'
+        if competition_level == "low":
             score += 1.5
-        elif market.competition_level == "high":
+        elif competition_level == "high":
             score -= 1.0
         
         return min(10.0, max(0.0, score))
@@ -123,20 +146,29 @@ class AnalysisAgent:
     
     def _score_traction(self, metrics: any) -> float:
         """Score business traction based on metrics"""
+        if not metrics:
+            return 0.0
+            
         score = 0.0
         
-        if metrics.revenue and metrics.revenue > 0:
+        revenue = getattr(metrics, 'revenue', 0) or 0
+        if revenue > 0:
             score += 3.0
-            if metrics.revenue_growth and metrics.revenue_growth > Config.MIN_REVENUE_GROWTH:
+            revenue_growth = getattr(metrics, 'revenue_growth', 0) or 0
+            if revenue_growth > Config.MIN_REVENUE_GROWTH:
                 score += 2.0
         
-        if metrics.employees and metrics.employees > 5:
+        employees = getattr(metrics, 'employees', 0) or 0
+        if employees > 5:
             score += 1.0
         
-        if metrics.cac and metrics.ltv and metrics.cac > 0 and metrics.ltv > metrics.cac * 3:
+        cac = getattr(metrics, 'cac', 0) or 0
+        ltv = getattr(metrics, 'ltv', 0) or 0
+        if cac > 0 and ltv > 0 and ltv > cac * 3:
             score += 2.0
         
-        if metrics.churn_rate is not None and metrics.churn_rate < 0.05:  # <5% monthly churn
+        churn_rate = getattr(metrics, 'churn_rate', None)
+        if churn_rate is not None and churn_rate < 0.05:  # <5% monthly churn
             score += 2.0
         
         return min(10.0, score)

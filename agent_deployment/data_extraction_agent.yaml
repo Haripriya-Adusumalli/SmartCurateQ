@@ -39,6 +39,6 @@ spec:
     - name: "data_validator"
       description: "Validate and clean extracted data"
   
-  model: "gemini-1.5-pro"
+  model: "gemini-2.5-pro"
   temperature: 0.1
   maxTokens: 4096

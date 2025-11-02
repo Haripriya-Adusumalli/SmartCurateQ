@@ -5,10 +5,10 @@ from datetime import datetime
 class FounderProfile(BaseModel):
     name: str
     background: str
-    experience_years: int
-    previous_exits: int
-    domain_expertise: str
-    founder_market_fit_score: float
+    experience_years: Optional[int] = 5
+    previous_exits: Optional[int] = 0
+    domain_expertise: Optional[str] = "Business"
+    founder_market_fit_score: Optional[float] = 6.0
 
 class MarketAnalysis(BaseModel):
     market_size: float

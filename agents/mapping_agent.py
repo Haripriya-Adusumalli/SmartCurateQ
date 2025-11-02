@@ -14,10 +14,14 @@ except ImportError:
 
 class MappingAgent:
     def __init__(self):
-        if VERTEX_AI_AVAILABLE and Config.USE_VERTEX_AI:
-            vertexai.init(project=Config.PROJECT_ID, location=Config.LOCATION)
-            self.model = GenerativeModel('gemini-pro')
-            self.use_vertex = True
+        if VERTEX_AI_AVAILABLE:
+            try:
+                vertexai.init(project=Config.PROJECT_ID, location=Config.LOCATION)
+                self.model = GenerativeModel('gemini-2.5-pro')
+                self.use_vertex = True
+            except Exception:
+                self.model = None
+                self.use_vertex = False
         else:
             self.model = None
             self.use_vertex = False
@@ -52,15 +56,21 @@ class MappingAgent:
             else:
                 differentiator = "Unique market positioning"
         
+        # Debug: Print extracted data to see what we're getting
+        print(f"MAPPING AGENT - Extracted data keys: {list(extracted_data.keys())}")
+        print(f"MAPPING AGENT - Company: {extracted_data.get('company_name')}")
+        print(f"MAPPING AGENT - Problem: {extracted_data.get('problem_statement')}")
+        print(f"MAPPING AGENT - Solution: {extracted_data.get('solution')}")
+        
         return StartupProfile(
-            company_name=extracted_data.get('company_name', 'Unknown Company'),
+            company_name=extracted_data.get('company_name') or 'Unknown Company',
             founders=founders,
-            problem_statement=extracted_data.get('problem_statement', 'Problem statement not provided'),
-            solution=extracted_data.get('solution', 'Solution not provided'),
+            problem_statement=extracted_data.get('problem_statement') or 'Problem not identified',
+            solution=extracted_data.get('solution') or 'Solution not identified',
             unique_differentiator=differentiator,
             market_analysis=market_analysis,
             business_metrics=business_metrics,
-            funding_stage=extracted_data.get('funding_stage', 'Unknown'),
+            funding_stage=extracted_data.get('funding_stage') or 'Seed',
             funding_amount=extracted_data.get('funding_amount')
         )
     
@@ -81,12 +91,12 @@ class MappingAgent:
             )
             
             founder = FounderProfile(
-                name=founder_info.get('name', 'Unknown Founder'),
-                background=founder_info.get('background', 'Background not specified'),
-                experience_years=founder_info.get('experience_years', 5),
-                previous_exits=founder_info.get('previous_exits', 0),
-                domain_expertise=founder_info.get('domain_expertise', 'Business'),
-                founder_market_fit_score=fit_score
+                name=founder_info.get('name') or 'Unknown Founder',
+                background=founder_info.get('background') or 'Background not specified',
+                experience_years=founder_info.get('experience_years') or 5,
+                previous_exits=founder_info.get('previous_exits') or 0,
+                domain_expertise=founder_info.get('domain_expertise') or 'Business',
+                founder_market_fit_score=fit_score or 6.0
             )
             founders.append(founder)
         
